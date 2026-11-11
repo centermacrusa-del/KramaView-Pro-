@@ -1,0 +1,382 @@
+{
+  "entities": {
+    "SavedAnalysis": {
+      "title": "SavedAnalysis",
+      "description": "Stores a saved technical chart layout, indicator setup, drawn technical objects, and market thesis for later review.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the user who created the analysis",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the saved chart analysis",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Ticker symbol analyzed (e.g. BTC/USDT, AAPL)",
+          "minLength": 1,
+          "maxLength": 24,
+          "pattern": "^[A-Z0-9\\-/]+$"
+        },
+        "assetClass": {
+          "type": "string",
+          "description": "Asset class of the instrument",
+          "enum": ["crypto", "stock", "gold"],
+          "maxLength": 16
+        },
+        "timeframe": {
+          "type": "string",
+          "description": "Chart interval timeframe",
+          "enum": ["1s", "5s", "15s", "30s", "1m", "5m", "15m", "30m", "1H", "4H", "1D", "1W", "1M", "3M", "6M", "1Y"],
+          "maxLength": 8
+        },
+        "chartType": {
+          "type": "string",
+          "description": "Visual chart rendering mode",
+          "enum": ["candles", "hollow", "heikin", "area", "line"],
+          "maxLength": 16
+        },
+        "savedPrice": {
+          "type": "number",
+          "description": "Market price at the moment the analysis was saved"
+        },
+        "targetPrice": {
+          "type": "number",
+          "description": "Take-profit target price for post-analysis review"
+        },
+        "stopLossPrice": {
+          "type": "number",
+          "description": "Stop-loss invalidation price for post-analysis review"
+        },
+        "direction": {
+          "type": "string",
+          "description": "Directional bias of the thesis",
+          "enum": ["bullish", "bearish", "neutral"],
+          "maxLength": 16
+        },
+        "notes": {
+          "type": "string",
+          "description": "Detailed technical commentary and review notes",
+          "minLength": 0,
+          "maxLength": 2000
+        },
+        "indicators": {
+          "type": "array",
+          "description": "List of enabled indicator identifiers (max 10)",
+          "maxLength": 10
+        },
+        "drawings": {
+          "type": "array",
+          "description": "List of technical drawing objects on the chart (max 50)",
+          "maxLength": 50
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update"
+        }
+      },
+      "required": [
+        "ownerId",
+        "title",
+        "symbol",
+        "assetClass",
+        "timeframe",
+        "chartType",
+        "savedPrice",
+        "targetPrice",
+        "stopLossPrice",
+        "direction",
+        "notes",
+        "indicators",
+        "drawings",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PriceAlert": {
+      "title": "PriceAlert",
+      "description": "Defines a real-time price threshold, trendline touch, RSI, or sharp volatility alert rule.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the alert owner",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Market symbol being monitored",
+          "minLength": 1,
+          "maxLength": 24,
+          "pattern": "^[A-Z0-9\\-/]+$"
+        },
+        "assetClass": {
+          "type": "string",
+          "description": "Asset category",
+          "enum": ["crypto", "stock", "gold"],
+          "maxLength": 16
+        },
+        "condition": {
+          "type": "string",
+          "description": "Trigger condition type",
+          "enum": [
+            "price_above",
+            "price_below",
+            "pct_spike_up",
+            "pct_drop_down",
+            "volatility_burst",
+            "rsi_overbought",
+            "rsi_oversold",
+            "rsi_channel_breakout",
+            "trendline_touch"
+          ],
+          "maxLength": 32
+        },
+        "threshold": {
+          "type": "number",
+          "description": "Target price level or percentage change threshold"
+        },
+        "status": {
+          "type": "string",
+          "description": "Operational state of the alert",
+          "enum": ["active", "paused", "triggered"],
+          "maxLength": 16
+        },
+        "notifyTelegram": {
+          "type": "boolean",
+          "description": "Whether to dispatch Telegram message on trigger"
+        },
+        "notifyEmail": {
+          "type": "boolean",
+          "description": "Whether to dispatch Email message on trigger"
+        },
+        "note": {
+          "type": "string",
+          "description": "Custom alert message or trading instruction",
+          "minLength": 0,
+          "maxLength": 300
+        },
+        "triggerCount": {
+          "type": "number",
+          "description": "Number of times this alert has fired"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update"
+        }
+      },
+      "required": [
+        "ownerId",
+        "symbol",
+        "assetClass",
+        "condition",
+        "threshold",
+        "status",
+        "notifyTelegram",
+        "notifyEmail",
+        "note",
+        "triggerCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AlertLog": {
+      "title": "AlertLog",
+      "description": "Historical record of triggered price or volatility alerts for post-trade audit and review.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the user who owns this alert log",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "alertId": {
+          "type": "string",
+          "description": "ID of the PriceAlert or detector that fired",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Symbol that triggered the alert",
+          "minLength": 1,
+          "maxLength": 24,
+          "pattern": "^[A-Z0-9\\-/]+$"
+        },
+        "conditionLabel": {
+          "type": "string",
+          "description": "Human-readable description of the condition",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "triggerPrice": {
+          "type": "number",
+          "description": "Market price when the alert triggered"
+        },
+        "changePercent": {
+          "type": "number",
+          "description": "Percentage change observed at trigger time"
+        },
+        "deliveryChannels": {
+          "type": "string",
+          "description": "Channels used to deliver the alert (In-App, Telegram, Email)",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "deliveryStatus": {
+          "type": "string",
+          "description": "Dispatch status of external notification",
+          "enum": ["delivered", "in_app_only", "failed"],
+          "maxLength": 32
+        },
+        "reviewed": {
+          "type": "boolean",
+          "description": "Whether the trader has reviewed this event"
+        },
+        "reviewNote": {
+          "type": "string",
+          "description": "Post-event trader reflection note",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of event"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update"
+        }
+      },
+      "required": [
+        "ownerId",
+        "alertId",
+        "symbol",
+        "conditionLabel",
+        "triggerPrice",
+        "changePercent",
+        "deliveryChannels",
+        "deliveryStatus",
+        "reviewed",
+        "reviewNote",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "NotificationConfig": {
+      "title": "NotificationConfig",
+      "description": "Private user configuration for Email and Telegram alert delivery channels.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the user (must match document ID)",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "emailEnabled": {
+          "type": "boolean",
+          "description": "Whether email notifications are enabled"
+        },
+        "recipientEmail": {
+          "type": "string",
+          "description": "Destination email address for alerts",
+          "minLength": 0,
+          "maxLength": 160
+        },
+        "emailWebhookUrl": {
+          "type": "string",
+          "description": "Optional custom webhook URL for email dispatch",
+          "minLength": 0,
+          "maxLength": 300
+        },
+        "telegramEnabled": {
+          "type": "boolean",
+          "description": "Whether Telegram Bot notifications are enabled"
+        },
+        "telegramBotToken": {
+          "type": "string",
+          "description": "Telegram Bot API token from @BotFather",
+          "minLength": 0,
+          "maxLength": 160
+        },
+        "telegramChatId": {
+          "type": "string",
+          "description": "Telegram target Chat ID or Channel ID",
+          "minLength": 0,
+          "maxLength": 64
+        },
+        "soundEnabled": {
+          "type": "boolean",
+          "description": "Whether acoustic alert chime plays on sudden volatility"
+        },
+        "autoSpikeThresholdPct": {
+          "type": "number",
+          "description": "Automatic percentage spike threshold for instant volatility alerts"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last configuration change"
+        }
+      },
+      "required": [
+        "ownerId",
+        "emailEnabled",
+        "recipientEmail",
+        "emailWebhookUrl",
+        "telegramEnabled",
+        "telegramBotToken",
+        "telegramChatId",
+        "soundEnabled",
+        "autoSpikeThresholdPct",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/savedAnalyses/{analysisId}": {
+      "schema": { "$ref": "#/entities/SavedAnalysis" },
+      "description": "User-saved technical analysis chart snapshots, drawings, and review notes"
+    },
+    "/priceAlerts/{alertId}": {
+      "schema": { "$ref": "#/entities/PriceAlert" },
+      "description": "User-configured real-time price and volatility alert rules"
+    },
+    "/alertLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AlertLog" },
+      "description": "Historical log of triggered alerts for post-market review"
+    },
+    "/notificationConfigs/{userId}": {
+      "schema": { "$ref": "#/entities/NotificationConfig" },
+      "description": "Private per-user Email and Telegram alert delivery credentials and preferences"
+    }
+  }
+}

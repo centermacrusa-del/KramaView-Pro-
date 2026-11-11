@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Remix Remix Remix KramaView Pro — កម្មវិធីវិភាគភាគហ៊ុន និងគ្រីបតូ",
+  "description": "កម្មវិធីវិភាគតម្លៃភាគហ៊ុន និងរូបិយប័ណ្ណគ្រីបតូតាមពេលវេលាជាក់ស្តែង រួមជាមួយឧបករណ៍គំនូរបច្ចេកទេសកម្រិតខ្ពស់ ការរក្សាទុកទិន្នន័យវិភាគ និងប្រព័ន្ធជូនដំណឹងភ្លាមៗតាមអ៊ីមែល និង Telegram។",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

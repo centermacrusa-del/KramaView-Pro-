@@ -1,0 +1,233 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitive Helpers
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation Blueprint: SavedAnalysis
+    function isValidSavedAnalysis(data) {
+      return data.keys().hasAll([
+        'ownerId', 'title', 'symbol', 'assetClass', 'timeframe', 'chartType',
+        'savedPrice', 'targetPrice', 'stopLossPrice', 'direction', 'notes',
+        'indicators', 'drawings', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId', 'title', 'symbol', 'assetClass', 'timeframe', 'chartType',
+        'savedPrice', 'targetPrice', 'stopLossPrice', 'direction', 'notes',
+        'indicators', 'drawings', 'createdAt', 'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+      data.symbol is string && data.symbol.size() >= 1 && data.symbol.size() <= 24 && data.symbol.matches('^[A-Z0-9\\-/]+$') &&
+      data.assetClass is string && data.assetClass.size() <= 16 && data.assetClass in ['crypto', 'stock', 'gold'] &&
+      data.timeframe is string && data.timeframe.size() <= 8 && data.timeframe in ['1s', '5s', '15s', '30s', '1m', '5m', '15m', '30m', '1H', '4H', '1D', '1W', '1M', '3M', '6M', '1Y'] &&
+      data.chartType is string && data.chartType.size() <= 16 && data.chartType in ['candles', 'hollow', 'heikin', 'area', 'line'] &&
+      data.savedPrice is number &&
+      data.targetPrice is number &&
+      data.stopLossPrice is number &&
+      data.direction is string && data.direction.size() <= 16 && data.direction in ['bullish', 'bearish', 'neutral'] &&
+      data.notes is string && data.notes.size() <= 2000 &&
+      data.indicators is list && data.indicators.size() <= 10 &&
+      (data.indicators.size() == 0 || (data.indicators[0] is string && data.indicators[0].size() <= 32)) &&
+      data.drawings is list && data.drawings.size() <= 50 &&
+      (data.drawings.size() == 0 || data.drawings[0] is map) &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // Validation Blueprint: PriceAlert
+    function isValidPriceAlert(data) {
+      return data.keys().hasAll([
+        'ownerId', 'symbol', 'assetClass', 'condition', 'threshold', 'status',
+        'notifyTelegram', 'notifyEmail', 'note', 'triggerCount', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId', 'symbol', 'assetClass', 'condition', 'threshold', 'status',
+        'notifyTelegram', 'notifyEmail', 'note', 'triggerCount', 'createdAt', 'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.symbol is string && data.symbol.size() >= 1 && data.symbol.size() <= 24 && data.symbol.matches('^[A-Z0-9\\-/]+$') &&
+      data.assetClass is string && data.assetClass.size() <= 16 && data.assetClass in ['crypto', 'stock', 'gold'] &&
+      data.condition is string && data.condition.size() <= 32 && data.condition in ['price_above', 'price_below', 'pct_spike_up', 'pct_drop_down', 'volatility_burst', 'rsi_overbought', 'rsi_oversold', 'rsi_channel_breakout', 'trendline_touch'] &&
+      data.threshold is number &&
+      data.status is string && data.status.size() <= 16 && data.status in ['active', 'paused', 'triggered'] &&
+      data.notifyTelegram is bool &&
+      data.notifyEmail is bool &&
+      data.note is string && data.note.size() <= 300 &&
+      data.triggerCount is number && data.triggerCount >= 0 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // Validation Blueprint: AlertLog
+    function isValidAlertLog(data) {
+      return data.keys().hasAll([
+        'ownerId', 'alertId', 'symbol', 'conditionLabel', 'triggerPrice',
+        'changePercent', 'deliveryChannels', 'deliveryStatus', 'reviewed',
+        'reviewNote', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId', 'alertId', 'symbol', 'conditionLabel', 'triggerPrice',
+        'changePercent', 'deliveryChannels', 'deliveryStatus', 'reviewed',
+        'reviewNote', 'createdAt', 'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.alertId is string && data.alertId.size() >= 1 && data.alertId.size() <= 128 && data.alertId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.symbol is string && data.symbol.size() >= 1 && data.symbol.size() <= 24 && data.symbol.matches('^[A-Z0-9\\-/]+$') &&
+      data.conditionLabel is string && data.conditionLabel.size() >= 1 && data.conditionLabel.size() <= 120 &&
+      data.triggerPrice is number &&
+      data.changePercent is number &&
+      data.deliveryChannels is string && data.deliveryChannels.size() >= 1 && data.deliveryChannels.size() <= 120 &&
+      data.deliveryStatus is string && data.deliveryStatus.size() <= 32 && data.deliveryStatus in ['delivered', 'in_app_only', 'failed'] &&
+      data.reviewed is bool &&
+      data.reviewNote is string && data.reviewNote.size() <= 500 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // Validation Blueprint: NotificationConfig (PII Isolated per User)
+    function isValidNotificationConfig(data) {
+      return data.keys().hasAll([
+        'ownerId', 'emailEnabled', 'recipientEmail', 'emailWebhookUrl',
+        'telegramEnabled', 'telegramBotToken', 'telegramChatId',
+        'soundEnabled', 'autoSpikeThresholdPct', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId', 'emailEnabled', 'recipientEmail', 'emailWebhookUrl',
+        'telegramEnabled', 'telegramBotToken', 'telegramChatId',
+        'soundEnabled', 'autoSpikeThresholdPct', 'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.emailEnabled is bool &&
+      data.recipientEmail is string && data.recipientEmail.size() <= 160 &&
+      data.emailWebhookUrl is string && data.emailWebhookUrl.size() <= 300 &&
+      data.telegramEnabled is bool &&
+      data.telegramBotToken is string && data.telegramBotToken.size() <= 160 &&
+      data.telegramChatId is string && data.telegramChatId.size() <= 64 &&
+      data.soundEnabled is bool &&
+      data.autoSpikeThresholdPct is number && data.autoSpikeThresholdPct >= 0.1 && data.autoSpikeThresholdPct <= 50 &&
+      data.updatedAt is timestamp;
+    }
+
+    // Collection 1: Saved Technical Analyses
+    match /savedAnalyses/{analysisId} {
+      allow get: if isSignedIn() && isValidId(analysisId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(analysisId) &&
+        isValidSavedAnalysis(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && isValidId(analysisId) &&
+        isValidSavedAnalysis(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          // Action: Update analysis notes, targets, chart state, or drawings
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'timeframe', 'chartType', 'targetPrice', 'stopLossPrice',
+            'direction', 'notes', 'indicators', 'drawings', 'updatedAt'
+          ])
+        );
+      allow delete: if isSignedIn() && isValidId(analysisId) && existing().ownerId == request.auth.uid;
+    }
+
+    // Collection 2: Real-Time Price & Volatility Alerts
+    match /priceAlerts/{alertId} {
+      allow get: if isSignedIn() && isValidId(alertId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(alertId) &&
+        isValidPriceAlert(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && isValidId(alertId) &&
+        isValidPriceAlert(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          // Action 1: Toggle status or record trigger fire
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'triggerCount', 'updatedAt']) ||
+          // Action 2: Edit alert configuration
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'condition', 'threshold', 'status', 'notifyTelegram', 'notifyEmail', 'note', 'updatedAt'
+          ])
+        );
+      allow delete: if isSignedIn() && isValidId(alertId) && existing().ownerId == request.auth.uid;
+    }
+
+    // Collection 3: Historical Alert Trigger Logs
+    match /alertLogs/{logId} {
+      allow get: if isSignedIn() && isValidId(logId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(logId) &&
+        isValidAlertLog(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (
+          incoming().alertId == 'auto_spike_detector' ||
+          (
+            exists(/databases/$(database)/documents/priceAlerts/$(incoming().alertId)) &&
+            get(/databases/$(database)/documents/priceAlerts/$(incoming().alertId)).data.ownerId == request.auth.uid
+          )
+        );
+      allow update: if isSignedIn() && isValidId(logId) &&
+        isValidAlertLog(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          // Action: Mark alert log as reviewed and attach post-trade review note
+          incoming().diff(existing()).affectedKeys().hasOnly(['reviewed', 'reviewNote', 'updatedAt'])
+        );
+      allow delete: if isSignedIn() && isValidId(logId) && existing().ownerId == request.auth.uid;
+    }
+
+    // Collection 4: Private User Notification Channel Configuration (PII Isolated)
+    match /notificationConfigs/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && userId == request.auth.uid;
+      allow list: if false;
+      allow create: if isSignedIn() && isValidId(userId) && userId == request.auth.uid &&
+        isValidNotificationConfig(incoming()) &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && isValidId(userId) && userId == request.auth.uid &&
+        isValidNotificationConfig(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().updatedAt == request.time && (
+          // Action: Update notification channel preferences
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'emailEnabled', 'recipientEmail', 'emailWebhookUrl',
+            'telegramEnabled', 'telegramBotToken', 'telegramChatId',
+            'soundEnabled', 'autoSpikeThresholdPct', 'updatedAt'
+          ])
+        );
+      allow delete: if isSignedIn() && isValidId(userId) && userId == request.auth.uid;
+    }
+  }
+}
